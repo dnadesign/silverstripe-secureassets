@@ -161,15 +161,13 @@ class SecureFileExtension extends DataExtension {
 	public function getCustomConfig() {
 		$frameworkDir = FRAMEWORK_DIR;
 		$path = $this->owner->getFilename();
-		$rule = explode('/', $path);
-		$rule = implode(' ', $rule);
 		$content = <<<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
 	<system.webServer>
 		<rewrite>
 			<rules>
-				<rule name="SilverStripe Secure Assets $rule" stopProcessing="true">
+				<rule name="SilverStripe secure files $path" stopProcessing="true">
 					<match url="^(.*)$" />
 					<action type="Rewrite" url="$frameworkDir/main.php?url=/$path{R:1}" appendQueryString="true" />
 				</rule>
