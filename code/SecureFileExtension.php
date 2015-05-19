@@ -44,19 +44,18 @@ class SecureFileExtension extends DataExtension {
 		$registeredConfigs = Config::inst()->get('SecureFileExtension', 'access_config');
 		if(!empty($_SERVER['SERVER_SOFTWARE'])) {
 			if(strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') !== false) {
-				return $registeredConfigs['Apache'];
+				$functionName = $registeredConfigs['Apache'];
+				return $this->$functionName();
 			} elseif(strpos($_SERVER['SERVER_SOFTWARE'], 'IIS') !== false) {
-				$content = $this->getCustomConfig();
-				$iss = $registeredConfigs['IIS'];
-				$iss['content'] = $content;
-				return $iss;
+				$functionName = $registeredConfigs['IIS'];
+				return $this->$functionName();
 			}
 		}
 
-		// fallback to Apache
-		return $registeredConfigs['Apache'];
+		$functionName = $registeredConfigs['Apache'];
+		return $this->$functionName();
 	}
-	
+
 	public function getCanViewType() {
 		// In case that there is no parent to inherit from, map Inherit to Anyone
 		$canViewType = $this->owner->getField('CanViewType');
@@ -158,9 +157,25 @@ class SecureFileExtension extends DataExtension {
 		}
 	}
 
-	public function getCustomConfig() {
+	public function getApacheConfig() {
+		$base = BASE_URL ? BASE_URL : '/';
+		$frameworkDir = FRAMEWORK_DIR;
+
+		return array(
+			'file' => '.htaccess',
+			'content' => <<<EOF
+RewriteEngine On
+RewriteBase $base
+RewriteCond %{REQUEST_URI} ^(.*)$
+RewriteRule .* $frameworkDir/main.php?url=%1 [QSA]
+EOF
+		);
+	}
+
+	public function getIISConfig() {
 		$frameworkDir = FRAMEWORK_DIR;
 		$path = $this->owner->getFilename();
+		$file = 'web.config';
 		$content = <<<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -179,7 +194,10 @@ class SecureFileExtension extends DataExtension {
 </configuration>
 EOF;
 
-		return $content;
+		return array(
+			'file' => $file,
+			'content' => $content
+		);
 	}
 
 	/**
