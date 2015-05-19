@@ -46,7 +46,10 @@ class SecureFileExtension extends DataExtension {
 			if(strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') !== false) {
 				return $registeredConfigs['Apache'];
 			} elseif(strpos($_SERVER['SERVER_SOFTWARE'], 'IIS') !== false) {
-				return $registeredConfigs['IIS'];
+				$content = $this->getCustomConfig();
+				$iss = $registeredConfigs['IIS'];
+				$iss['content'] = $content;
+				return $iss;
 			}
 		}
 
@@ -153,6 +156,32 @@ class SecureFileExtension extends DataExtension {
 				)
 			);
 		}
+	}
+
+	public function getCustomConfig() {
+		$frameworkDir = FRAMEWORK_DIR;
+		$path = $this->owner->getFilename();
+		$rule = explode('/', $path);
+		$rule = implode(' ', $rule);
+		$content = <<<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+	<system.webServer>
+		<rewrite>
+			<rules>
+				<rule name="SilverStripe Secure Assets $rule" stopProcessing="true">
+					<match url="^(.*)$" />
+					<action type="Rewrite" url="$frameworkDir/main.php?url=/$path{R:1}" appendQueryString="true" />
+				</rule>
+			</rules>
+		</rewrite>
+		<httpErrors errorMode="Detailed">
+		</httpErrors>
+	</system.webServer>
+</configuration>
+EOF;
+
+		return $content;
 	}
 
 	/**
