@@ -184,7 +184,7 @@ EOF
 			<rules>
 				<rule name="SilverStripe secure files $path" stopProcessing="true">
 					<match url="^(.*)$" />
-					<action type="Rewrite" url="$frameworkDir/main.php?url=/$path{R:1}" appendQueryString="true" />
+					<action type="Rewrite" url="/$frameworkDir/main.php?url=/$path{R:1}" appendQueryString="true" />
 				</rule>
 			</rules>
 		</rewrite>
